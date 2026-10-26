@@ -4,7 +4,7 @@ const listings = [
   { id: 3, activity: 'マラソン', title: '湘南国際に向けて10km', area: '鎌倉', time: '土 16:00', distance: '10 km', pace: '普通', paceValue: '6:00/km', host: 'Yuki · Bランク', people: 'あと4人', note: '大会に向けて、一定ペースで走ります。' },
 ];
 
-const views = new Set(['home', 'search', 'create', 'profile', 'settings']);
+const views = new Set(['home', 'run', 'search', 'create', 'profile', 'settings']);
 const state = { view: 'home', activity: 'すべて', pace: 'すべて', area: 'すべて', joined: new Set(), stats: { joined: 24, monthlyKm: 186, crewDays: 12 } };
 const mapPoints = { 'ランニング': { x: 286, y: 168, color: '#d9ff4a' }, '散歩': { x: 206, y: 244, color: '#8cdbff' }, 'マラソン': { x: 348, y: 104, color: '#ff745c' } };
 let closeTimer;
@@ -137,6 +137,8 @@ function renderProfileStats() {
   $('#stat-joined').textContent = state.stats.joined;
   $('#stat-km').textContent = state.stats.monthlyKm.toFixed(1).replace('.0', '');
   $('#stat-days').textContent = state.stats.crewDays;
+  if ($('#run-page-km')) $('#run-page-km').textContent = state.stats.monthlyKm.toFixed(1).replace('.0', '');
+  if ($('#run-page-days')) $('#run-page-days').textContent = state.stats.crewDays;
 }
 
 function formatTrackerTime(seconds) {
@@ -239,6 +241,8 @@ $('#locate-me-search')?.addEventListener('click', locateMe);
 $('#tracker-start')?.addEventListener('click', startTracker);
 $('#tracker-pause')?.addEventListener('click', pauseTracker);
 $('#tracker-finish')?.addEventListener('click', finishTracker);
+$$('[data-start-run]').forEach(button => button.addEventListener('click', () => { setView('profile'); window.setTimeout(startTracker, 180); }));
+$$('[data-run-search]').forEach(button => button.addEventListener('click', () => { setView('search'); setFilter('activity', 'ランニング'); }));
 $$('[data-setting]').forEach(row => row.addEventListener('click', () => {
   const toggle = $('.toggle', row);
   if (toggle) toggle.classList.toggle('active');
