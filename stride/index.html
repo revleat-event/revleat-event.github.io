@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#08131c" />
+    <meta name="description" content="RUNNECT（ラネクト） — 一人の運動を、仲間との体験へ。神奈川県のランニング・散歩・マラソン仲間募集アプリのプロトタイプ。" />
+    <title>RUNNECT（ラネクト） — 一人の運動を、仲間との体験へ。</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <a class="wordmark" href="#home" aria-label="RUNNECT ホーム"><span class="wordmark-mark">S</span><span>RUNNECT</span></a>
+        <div class="header-actions"><button class="icon-button" type="button" aria-label="通知"><span class="notification-dot"></span>◌</button><button class="avatar avatar--small" type="button" data-view="profile" aria-label="マイページ">B</button></div>
+      </header>
+
+      <main>
+        <section class="view active" id="view-home" data-view-panel="home">
+          <div class="home-heading">
+            <div><p class="eyebrow"><span class="eyebrow-line"></span> KANAGAWA / TODAY</p><h1><span>今日の一歩を、</span><em>誰かと。</em></h1></div>
+            <div class="rank-badge rank-badge--home"><strong>C</strong><span>RANK</span></div>
+          </div>
+          <div class="hero-card">
+            <div class="hero-card-grid"></div>
+            <div class="hero-card-copy"><p class="hero-kicker">YOUR PACE, YOUR PEOPLE</p><h2>あなたのペースで、<br />仲間を見つける。</h2><button class="primary-button" type="button" data-view="search">仲間を探す <span>↗</span></button></div>
+            <div class="hero-metric"><span>AVERAGE PACE</span><strong>6:20</strong><small>/ KM</small></div>
+          </div>
+
+          <section class="section-block map-section" aria-labelledby="map-title"><div class="section-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> LIVE MAP</p><h2 id="map-title">近くの募集</h2></div><button class="text-button" type="button" id="locate-me">現在地を表示</button></div><div class="map-card" data-map><div class="map-toolbar"><span class="map-status"><i></i><span id="location-label">現在地：横浜駅付近</span></span><span class="map-scale">KANAGAWA</span></div><svg class="map-visual" viewBox="0 0 600 360" role="img" aria-label="神奈川県内の募集地点と現在地を示すデモマップ"><path class="map-coast" d="M82 18C140 50 168 71 207 68c48-3 64 24 102 36 35 11 58 42 92 50 41 10 61 47 72 77 12 32 3 67 37 103l-89 12c-43-29-84-38-124-33-43 5-73-16-92-48-17-28-42-35-62-57-25-27-33-70-61-102z"/><path class="map-road" d="M113 40C178 87 196 143 287 169s104 41 159 128M151 287c74-42 95-101 136-142s104-59 191-48M85 176c78 6 119-8 177-67s111-58 189-59M235 333c11-70 32-108 90-164"/><path class="map-water" d="M0 292C82 275 108 302 153 332 188 355 229 362 274 360H0z"/><g class="map-place-labels"><text x="420" y="68">川崎</text><text x="274" y="151">横浜</text><text x="184" y="250">鎌倉</text><text x="100" y="320">藤沢</text></g><g id="map-markers"></g><g id="current-location-marker" class="current-marker" transform="translate(286 168)"><circle class="current-pulse" r="25"/><circle class="current-dot" r="8"/><text x="12" y="4">現在地</text></g></svg><div class="map-legend"><span><i class="legend-dot legend-dot--run"></i>ランニング</span><span><i class="legend-dot legend-dot--walk"></i>散歩</span><span><i class="legend-dot legend-dot--marathon"></i>マラソン</span></div></div></section>
+
+          <section class="section-block quick-section" aria-labelledby="quick-title"><div class="section-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> QUICK START</p><h2 id="quick-title">何をする？</h2></div><button class="text-button" type="button" data-view="search">すべて見る ↗</button></div><div class="activity-grid"><button class="activity-card activity-card--run" type="button" data-filter-activity="ランニング"><span class="activity-icon">↗</span><b>走る</b><small>RUNNING</small></button><button class="activity-card activity-card--walk" type="button" data-filter-activity="散歩"><span class="activity-icon">⌁</span><b>歩く</b><small>WALKING</small></button><button class="activity-card activity-card--marathon" type="button" data-filter-activity="マラソン"><span class="activity-icon">◒</span><b>大会に向けて</b><small>MARATHON</small></button></div></section>
+
+          <section class="section-block" aria-labelledby="nearby-title"><div class="section-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> NEARBY CREWS</p><h2 id="nearby-title">近くの募集</h2></div><span class="result-count">03 MATCHES</span></div><div class="listing-stack" id="home-listings"></div></section>
+        </section>
+
+        <section class="view" id="view-search" data-view-panel="search">
+          <div class="page-heading"><p class="eyebrow"><span class="eyebrow-line"></span> FIND YOUR CREW</p><h1>仲間を<br /><em>探す。</em></h1><p>走る場所、ペース、距離。<br />自分に合う条件から見つけよう。</p></div>
+          <div class="filter-panel"><div class="filter-top"><span>FILTERS</span><button class="reset-button" type="button" id="reset-filters">RESET</button></div><div class="filter-group"><label>ACTIVITY</label><div class="chip-row" data-filter-group="activity"><button class="filter-chip active" type="button" data-value="すべて">すべて</button><button class="filter-chip" type="button" data-value="ランニング">ランニング</button><button class="filter-chip" type="button" data-value="散歩">散歩</button><button class="filter-chip" type="button" data-value="マラソン">マラソン</button></div></div><div class="filter-group"><label>PACE</label><div class="chip-row" data-filter-group="pace"><button class="filter-chip active" type="button" data-value="すべて">すべて</button><button class="filter-chip" type="button" data-value="ゆっくり">ゆっくり</button><button class="filter-chip" type="button" data-value="普通">普通</button><button class="filter-chip" type="button" data-value="速め">速め</button></div></div><div class="filter-group"><label>AREA</label><div class="chip-row" data-filter-group="area"><button class="filter-chip active" type="button" data-value="すべて">すべて</button><button class="filter-chip" type="button" data-value="横浜">横浜</button><button class="filter-chip" type="button" data-value="川崎">川崎</button><button class="filter-chip" type="button" data-value="鎌倉">鎌倉</button></div></div></div>
+          <div class="search-results"><div class="section-heading"><h2>募集一覧</h2><span class="result-count" id="search-count">03 MATCHES</span></div><div class="map-card map-card--search" data-map><div class="map-toolbar"><span class="map-status"><i></i><span>現在地と募集場所</span></span><button class="map-link" type="button" id="locate-me-search">現在地を更新</button></div><svg class="map-visual" viewBox="0 0 600 360" role="img" aria-label="検索条件に一致する募集地点を示すデモマップ"><path class="map-coast" d="M82 18C140 50 168 71 207 68c48-3 64 24 102 36 35 11 58 42 92 50 41 10 61 47 72 77 12 32 3 67 37 103l-89 12c-43-29-84-38-124-33-43 5-73-16-92-48-17-28-42-35-62-57-25-27-33-70-61-102z"/><path class="map-road" d="M113 40C178 87 196 143 287 169s104 41 159 128M151 287c74-42 95-101 136-142s104-59 191-48M85 176c78 6 119-8 177-67s111-58 189-59M235 333c11-70 32-108 90-164"/><path class="map-water" d="M0 292C82 275 108 302 153 332 188 355 229 362 274 360H0z"/><g class="map-place-labels"><text x="420" y="68">川崎</text><text x="274" y="151">横浜</text><text x="184" y="250">鎌倉</text><text x="100" y="320">藤沢</text></g><g class="map-markers" data-map-markers></g><g class="current-marker" data-current-marker transform="translate(286 168)"><circle class="current-pulse" r="25"/><circle class="current-dot" r="8"/><text x="12" y="4">現在地</text></g></svg></div><div class="listing-stack" id="search-listings"></div></div>
+        </section>
+
+        <section class="view" id="view-create" data-view-panel="create">
+          <div class="page-heading page-heading--compact"><p class="eyebrow"><span class="eyebrow-line"></span> START A CREW</p><h1>募集を<br /><em>つくる。</em></h1><p>一緒に動く仲間を募集しよう。<br />まずは気軽な予定から。</p></div>
+          <form class="create-form" id="create-form"><div class="form-section"><div class="form-label"><span>01</span><label>何をする？</label></div><div class="segmented-control" data-create-group="activity"><button class="segment active" type="button" data-value="ランニング">ランニング</button><button class="segment" type="button" data-value="散歩">散歩</button><button class="segment" type="button" data-value="マラソン">マラソン</button></div></div><div class="form-section"><div class="form-label"><span>02</span><label>どこで？</label></div><select name="area" class="field-select"><option>横浜</option><option>川崎</option><option>鎌倉</option><option>藤沢</option><option>神奈川県内</option></select></div><div class="form-grid"><div class="form-section"><div class="form-label"><span>03</span><label>距離</label></div><select name="distance" class="field-select"><option>3 km</option><option selected>5 km</option><option>10 km</option><option>ハーフ</option></select></div><div class="form-section"><div class="form-label"><span>04</span><label>ペース</label></div><select name="pace" class="field-select"><option>ゆっくり</option><option selected>普通</option><option>速め</option></select></div></div><div class="form-section"><div class="form-label"><span>05</span><label>いつ？</label></div><input class="text-input" name="date" type="text" value="土曜日 09:00" /></div><div class="form-section"><div class="form-label"><span>06</span><label>ひとこと</label></div><textarea class="text-input text-area" name="note" rows="3">会話しながら楽しく走れる方、ぜひ。</textarea></div><button class="primary-button primary-button--full" type="submit">募集を公開する <span>↗</span></button></form>
+        </section>
+
+        <section class="view" id="view-profile" data-view-panel="profile">
+          <div class="profile-cover"><div class="profile-cover-lines"></div><p class="eyebrow"><span class="eyebrow-line"></span> MY RUNNECT</p><div class="profile-person"><div class="avatar avatar--large">B</div><div><h1>BEATRICE</h1><p>横浜 / 週2〜3回</p></div></div></div>
+          <div class="profile-rank-card"><div class="profile-rank-copy"><p class="eyebrow">RUNNING RANK</p><h2>Steady<br /><em>RUNNECTR</em></h2><p>自分のペースで、着実に。</p></div><div class="rank-badge rank-badge--profile"><strong>C</strong><span>6:20<br />/ KM</span></div></div>
+          <div class="profile-stats"><div><strong>24</strong><span>JOINED</span></div><div><strong>186</strong><span>KM / MONTH</span></div><div><strong>12</strong><span>CREW DAYS</span></div></div>
+          <section class="section-block profile-goals"><div class="section-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span> MY PREFERENCES</p><h2>探したい仲間</h2></div></div><div class="preference-list"><div><span>活動</span><b>ランニング / 散歩</b></div><div><span>ペース</span><b>ゆっくり〜普通</b></div><div><span>距離</span><b>3〜10 km</b></div></div></section>
+        </section>
+
+        <section class="view" id="view-settings" data-view-panel="settings">
+          <div class="page-heading page-heading--compact"><p class="eyebrow"><span class="eyebrow-line"></span> APP SETTINGS</p><h1>設定を<br /><em>整える。</em></h1><p>あなたの使いやすいRUNNECT（ラネクト）に。<br />設定はこの端末内のデモ状態です。</p></div>
+          <div class="settings-list"><div class="settings-group"><p class="settings-group-label">PREFERENCES</p><button class="settings-row" type="button" data-setting="通知"><span class="settings-icon">◌</span><span class="settings-copy"><b>イベント通知</b><small>新しい募集や参加申請を知らせる</small></span><span class="toggle active" aria-hidden="true"><i></i></span></button><button class="settings-row" type="button" data-setting="位置情報"><span class="settings-icon">⌖</span><span class="settings-copy"><b>位置情報</b><small>現在地から近い募集を表示する</small></span><span class="toggle" aria-hidden="true"><i></i></span></button><button class="settings-row" type="button" data-setting="モーション"><span class="settings-icon">↗</span><span class="settings-copy"><b>アニメーション</b><small>画面の動きをゆるやかに表示する</small></span><span class="toggle active" aria-hidden="true"><i></i></span></button></div><div class="settings-group"><p class="settings-group-label">ACCOUNT</p><button class="settings-row settings-row--link" type="button" data-setting="プロフィール"><span class="settings-icon">◯</span><span class="settings-copy"><b>プロフィールを編集</b><small>名前・エリア・ペースを変更</small></span><span class="settings-arrow">›</span></button><a class="settings-row settings-row--link" href="safety.html"><span class="settings-icon">?</span><span class="settings-copy"><b>ヘルプ・安全ガイド</b><small>安心して仲間を探すために</small></span><span class="settings-arrow">›</span></a></div><div class="settings-footer"><span>RUNNECT PROTOTYPE</span><b>v0.3 / KANAGAWA</b></div><div class="legal-links"><a href="terms.html">利用規約</a><a href="privacy.html">プライバシーポリシー</a><a href="safety.html">安全ガイド</a></div></div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="メインナビゲーション"><button class="nav-item active" type="button" data-view="home"><span>⌂</span><small>ホーム</small></button><button class="nav-item" type="button" data-view="search"><span>⌕</span><small>仲間を探す</small></button><button class="nav-item nav-item--create" type="button" data-view="create"><span>＋</span><small>募集を作る</small></button><button class="nav-item" type="button" data-view="profile"><span>◯</span><small>マイページ</small></button><button class="nav-item" type="button" data-view="settings"><span>⚙</span><small>設定</small></button></nav>
+    </div>
+
+    <div class="modal-backdrop" id="modal-backdrop" hidden></div><aside class="detail-sheet" id="detail-sheet" aria-hidden="true"><button class="sheet-close" type="button" id="close-sheet" aria-label="閉じる">×</button><div id="detail-content"></div></aside><div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,174 @@
+const listings = [
+  { id: 1, activity: 'ランニング', title: '朝の山下公園、ゆっくり5km', area: '横浜', time: '土 07:30', distance: '5 km', pace: 'ゆっくり', paceValue: '7:00/km', host: 'Mika · Cランク', people: 'あと3人', note: '朝の空気を楽しみながら。会話できるペースです。' },
+  { id: 2, activity: '散歩', title: 'みなとみらいの朝さんぽ', area: '横浜', time: '日 09:00', distance: '4 km', pace: 'ゆっくり', paceValue: '会話ペース', host: 'Ken · WALKER', people: 'あと2人', note: 'コーヒー休憩あり。初参加も歓迎です。' },
+  { id: 3, activity: 'マラソン', title: '湘南国際に向けて10km', area: '鎌倉', time: '土 16:00', distance: '10 km', pace: '普通', paceValue: '6:00/km', host: 'Yuki · Bランク', people: 'あと4人', note: '大会に向けて、一定ペースで走ります。' },
+];
+
+const views = new Set(['home', 'search', 'create', 'profile', 'settings']);
+const state = { view: 'home', activity: 'すべて', pace: 'すべて', area: 'すべて', joined: new Set() };
+const mapPoints = { 'ランニング': { x: 286, y: 168, color: '#d9ff4a' }, '散歩': { x: 206, y: 244, color: '#8cdbff' }, 'マラソン': { x: 348, y: 104, color: '#ff745c' } };
+let closeTimer;
+const $ = (selector, root = document) => root.querySelector(selector);
+const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+function listingMarkup(item) {
+  const joined = state.joined.has(item.id);
+  return `<button class="listing-card" type="button" data-listing-id="${item.id}" aria-label="${item.title}の詳細を見る">
+    <div class="listing-top"><span class="activity-label">${item.activity.toUpperCase()}</span><span class="listing-time">${item.time}</span></div>
+    <h3 class="listing-title">${item.title}</h3>
+    <div class="listing-data"><span class="data-chip"><strong>${item.distance}</strong></span><span class="data-chip"><strong>${item.paceValue}</strong></span><span class="data-chip">${item.area}</span></div>
+    <div class="listing-bottom"><span>${joined ? '✓ 参加申請済み' : item.host}</span><span>${item.people}</span></div>
+  </button>`;
+}
+
+function matches(item) {
+  return (state.activity === 'すべて' || item.activity === state.activity) && (state.pace === 'すべて' || item.pace === state.pace) && (state.area === 'すべて' || item.area === state.area);
+}
+
+function renderListings() {
+  const home = $('#home-listings');
+  const results = listings.filter(matches);
+  if (home) home.innerHTML = listings.slice(0, 3).map(listingMarkup).join('');
+  const search = $('#search-listings');
+  if (search) search.innerHTML = results.length ? results.map(listingMarkup).join('') : '<div class="empty-state"><strong>条件に合う募集がありません。</strong><span>フィルターを変えて探してみよう。</span></div>';
+  const count = $('#search-count');
+  if (count) count.textContent = `${String(results.length).padStart(2, '0')} MATCHES`;
+  $$('.listing-card').forEach(card => card.addEventListener('click', () => openDetail(Number(card.dataset.listingId))));
+  renderMaps();
+}
+
+function renderMaps() {
+  $$('[data-map-markers], #map-markers').forEach(layer => {
+    layer.innerHTML = listings.filter(matches).map(item => {
+      const point = mapPoints[item.activity] || mapPoints['ランニング'];
+      return `<g class="map-marker" transform="translate(${point.x} ${point.y})" data-map-listing="${item.id}" tabindex="0" role="button" aria-label="${item.title}"><circle class="marker-halo" r="17"/><circle class="marker-dot" r="8" fill="${point.color}"/><text x="13" y="4">${item.area}</text></g>`;
+    }).join('');
+    $$('.map-marker', layer).forEach(marker => { marker.addEventListener('click', () => openDetail(Number(marker.dataset.mapListing))); marker.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') openDetail(Number(marker.dataset.mapListing)); }); });
+  });
+}
+
+function locateMe() {
+  const update = (x, y, label) => { $$('[data-current-marker], #current-location-marker').forEach(marker => marker.setAttribute('transform', `translate(${x} ${y})`)); $$('#location-label').forEach(node => { node.textContent = label; }); showToast(label); };
+  if (!navigator.geolocation) { update(286, 168, '現在地：横浜駅付近（デモ）'); return; }
+  navigator.geolocation.getCurrentPosition(position => { const x = Math.max(70, Math.min(520, 286 + (position.coords.longitude - 139.62) * 900)); const y = Math.max(50, Math.min(310, 168 - (position.coords.latitude - 35.45) * 900)); update(x, y, '現在地：位置情報を取得しました'); }, () => update(286, 168, '現在地：横浜駅付近（デモ）'), { enableHighAccuracy: false, timeout: 5000 });
+}
+
+function openDetail(id) {
+  const item = listings.find(listing => listing.id === id);
+  if (!item) return;
+  const joined = state.joined.has(id);
+  clearTimeout(closeTimer);
+  $('#detail-content').innerHTML = `<p class="detail-kicker">${item.activity.toUpperCase()} / ${item.area}</p><h2>${item.title}</h2><p>${item.note}</p><div class="listing-data"><span class="data-chip"><strong>${item.distance}</strong></span><span class="data-chip"><strong>${item.paceValue}</strong></span><span class="data-chip">${item.host}</span></div><div class="detail-meta"><div><span>WHEN</span><strong>${item.time}</strong></div><div><span>SPOTS</span><strong>${item.people}</strong></div><div><span>PACE</span><strong>${item.pace}</strong></div><div><span>AREA</span><strong>${item.area}</strong></div></div><button class="primary-button detail-action" type="button" data-join-id="${id}">${joined ? '参加申請済み' : 'この募集に参加する'} <span>${joined ? '✓' : '↗'}</span></button>`;
+  $('#modal-backdrop').hidden = false;
+  $('#detail-sheet').classList.add('open');
+  $('#detail-sheet').setAttribute('aria-hidden', 'false');
+  document.body.classList.add('modal-open');
+  $('[data-join-id]')?.addEventListener('click', () => joinListing(id));
+}
+
+function closeDetail() {
+  const sheet = $('#detail-sheet');
+  if (!sheet.classList.contains('open')) return;
+  sheet.classList.remove('open');
+  sheet.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('modal-open');
+  clearTimeout(closeTimer);
+  closeTimer = window.setTimeout(() => { $('#modal-backdrop').hidden = true; }, 320);
+}
+
+function joinListing(id) {
+  state.joined.add(id);
+  renderListings();
+  openDetail(id);
+  showToast('参加申請を送信しました');
+}
+
+function setView(view, updateHash = true) {
+  if (!views.has(view)) view = 'home';
+  state.view = view;
+  closeDetail();
+  $$('[data-view-panel]').forEach(panel => panel.classList.toggle('active', panel.dataset.viewPanel === view));
+  $$('[data-view]').forEach(button => {
+    const active = button.dataset.view === view;
+    button.classList.toggle('active', active);
+    if (button.classList.contains('nav-item')) button.setAttribute('aria-current', active ? 'page' : 'false');
+  });
+  if (updateHash && window.location.hash !== `#${view}`) history.replaceState(null, '', `#${view}`);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (view === 'search') renderListings();
+}
+
+function setFilter(group, value) {
+  state[group] = value;
+  $$(`[data-filter-group="${group}"] .filter-chip`).forEach(chip => {
+    const active = chip.dataset.value === value;
+    chip.classList.toggle('active', active);
+    chip.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+  renderListings();
+}
+
+function resetFilters() {
+  state.activity = 'すべて';
+  state.pace = 'すべて';
+  state.area = 'すべて';
+  ['activity', 'pace', 'area'].forEach(group => {
+    $$(`[data-filter-group="${group}"] .filter-chip`).forEach(chip => {
+      const active = chip.dataset.value === 'すべて';
+      chip.classList.toggle('active', active);
+      chip.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  });
+  renderListings();
+}
+
+function showToast(message) {
+  const toast = $('#toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  window.clearTimeout(showToast.timer);
+  showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 2400);
+}
+
+$$('[data-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
+$('.wordmark')?.addEventListener('click', event => { event.preventDefault(); setView('home'); });
+$('.icon-button')?.addEventListener('click', () => showToast('新しい通知はありません'));
+$$('[data-filter-group]').forEach(group => {
+  const key = group.dataset.filterGroup;
+  $$('.filter-chip', group).forEach(chip => chip.addEventListener('click', () => setFilter(key, chip.dataset.value)));
+});
+$$('[data-filter-activity]').forEach(button => button.addEventListener('click', () => { setView('search'); setFilter('activity', button.dataset.filterActivity); }));
+$$('[data-create-group]').forEach(group => $$('.segment', group).forEach(segment => segment.addEventListener('click', () => {
+  $$('.segment', group).forEach(item => { item.classList.remove('active'); item.setAttribute('aria-pressed', 'false'); });
+  segment.classList.add('active');
+  segment.setAttribute('aria-pressed', 'true');
+})));
+$('#reset-filters')?.addEventListener('click', resetFilters);
+$('#locate-me')?.addEventListener('click', locateMe);
+$('#locate-me-search')?.addEventListener('click', locateMe);
+$$('[data-setting]').forEach(row => row.addEventListener('click', () => {
+  const toggle = $('.toggle', row);
+  if (toggle) toggle.classList.toggle('active');
+  showToast(`${row.dataset.setting}の設定を更新しました`);
+}));
+$('#close-sheet')?.addEventListener('click', closeDetail);
+$('#modal-backdrop')?.addEventListener('click', closeDetail);
+document.addEventListener('keydown', event => { if (event.key === 'Escape') closeDetail(); });
+window.addEventListener('hashchange', () => setView(window.location.hash.slice(1), false));
+
+$('#create-form')?.addEventListener('submit', event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const selectedActivity = $('.segment.active')?.dataset.value || 'ランニング';
+  const newListing = { id: Date.now(), activity: selectedActivity, title: `${form.get('area')}で${selectedActivity}仲間を募集`, area: form.get('area'), time: form.get('date'), distance: form.get('distance'), pace: form.get('pace'), paceValue: form.get('pace') === 'ゆっくり' ? '7:00/km' : form.get('pace') === '速め' ? '5:00/km' : '6:00/km', host: 'あなた · Cランク', people: 'あと3人', note: form.get('note') };
+  listings.unshift(newListing);
+  renderListings();
+  showToast('募集を公開しました');
+  setView('search');
+});
+
+$$('.filter-chip').forEach(chip => chip.setAttribute('aria-pressed', chip.classList.contains('active') ? 'true' : 'false'));
+$$('.segment').forEach(segment => segment.setAttribute('aria-pressed', segment.classList.contains('active') ? 'true' : 'false'));
+renderListings();
+const initialView = window.location.hash.slice(1);
+setView(views.has(initialView) ? initialView : 'home', false);
