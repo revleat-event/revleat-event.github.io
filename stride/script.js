@@ -5,9 +5,10 @@ const listings = [
 ];
 
 const views = new Set(['home', 'search', 'create', 'profile', 'settings']);
-const state = { view: 'home', activity: 'すべて', pace: 'すべて', area: 'すべて', joined: new Set() };
+const state = { view: 'home', activity: 'すべて', pace: 'すべて', area: 'すべて', joined: new Set(), stats: { joined: 24, monthlyKm: 186, crewDays: 12 } };
 const mapPoints = { 'ランニング': { x: 286, y: 168, color: '#d9ff4a' }, '散歩': { x: 206, y: 244, color: '#8cdbff' }, 'マラソン': { x: 348, y: 104, color: '#ff745c' } };
 let closeTimer;
+const tracker = { status: 'ready', startedAt: 0, elapsed: 0, distance: 0, timer: null, watchId: null, lastPosition: null, gpsTimer: null, mode: 'gps' };
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
@@ -77,7 +78,9 @@ function closeDetail() {
 }
 
 function joinListing(id) {
+  if (!state.joined.has(id)) state.stats.joined += 1;
   state.joined.add(id);
+  renderProfileStats();
   renderListings();
   openDetail(id);
   showToast('参加申請を送信しました');
@@ -130,6 +133,93 @@ function showToast(message) {
   showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 2400);
 }
 
+function renderProfileStats() {
+  $('#stat-joined').textContent = state.stats.joined;
+  $('#stat-km').textContent = state.stats.monthlyKm.toFixed(1).replace('.0', '');
+  $('#stat-days').textContent = state.stats.crewDays;
+}
+
+function formatTrackerTime(seconds) {
+  const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
+  return `${mins}:${secs}`;
+}
+
+function formatPace() {
+  if (!tracker.distance || !tracker.elapsed) return '--:--';
+  const totalMinutes = tracker.elapsed / 60 / tracker.distance;
+  const mins = Math.floor(totalMinutes);
+  const secs = Math.round((totalMinutes - mins) * 60).toString().padStart(2, '0');
+  return `${mins}:${secs}`;
+}
+
+function renderTracker() {
+  $('#tracker-time').textContent = formatTrackerTime(tracker.elapsed);
+  $('#tracker-distance').textContent = tracker.distance.toFixed(2);
+  $('#tracker-pace').textContent = formatPace();
+  $('#tracker-live').textContent = tracker.status === 'running' ? (tracker.mode === 'gps' ? 'GPS LIVE' : 'SIM LIVE') : tracker.status.toUpperCase();
+  const start = $('#tracker-start');
+  const pause = $('#tracker-pause');
+  const finish = $('#tracker-finish');
+  if (!start) return;
+  start.innerHTML = tracker.status === 'paused' ? '再開する <span>▶</span>' : tracker.status === 'running' ? '測定中 <span>●</span>' : '測定を開始 <span>▶</span>';
+  pause.disabled = tracker.status !== 'running';
+  finish.disabled = tracker.status !== 'running' && tracker.status !== 'paused';
+}
+
+function stopTrackerSources() {
+  clearInterval(tracker.timer); tracker.timer = null;
+  clearTimeout(tracker.gpsTimer); tracker.gpsTimer = null;
+  if (tracker.watchId !== null && navigator.geolocation) navigator.geolocation.clearWatch(tracker.watchId);
+  tracker.watchId = null;
+}
+
+function useSimulation() {
+  tracker.mode = 'simulation';
+  $('#tracker-status').textContent = 'GPSを使えないため、6:20/kmのシミュレーションで測定中です。';
+}
+
+function startTracker() {
+  if (tracker.status === 'finished') { tracker.elapsed = 0; tracker.distance = 0; tracker.lastPosition = null; }
+  if (tracker.status === 'running') return;
+  tracker.status = 'running';
+  tracker.startedAt = Date.now() - tracker.elapsed * 1000;
+  tracker.mode = 'gps';
+  $('#tracker-status').textContent = 'GPS位置情報を待っています。動かない場合は自動でシミュレーションへ切り替えます。';
+  tracker.timer = window.setInterval(() => { tracker.elapsed = Math.floor((Date.now() - tracker.startedAt) / 1000); if (tracker.mode === 'simulation') tracker.distance += 0.00263; renderTracker(); }, 1000);
+  tracker.gpsTimer = window.setTimeout(() => { if (!tracker.lastPosition) useSimulation(); }, 5000);
+  if (navigator.geolocation) tracker.watchId = navigator.geolocation.watchPosition(position => {
+    if (tracker.lastPosition) tracker.distance += haversineKm(tracker.lastPosition, position);
+    tracker.lastPosition = position;
+    tracker.mode = 'gps';
+    $('#tracker-status').textContent = 'GPS位置情報で測定中です。';
+  }, () => useSimulation(), { enableHighAccuracy: true, maximumAge: 3000, timeout: 5000 });
+  else useSimulation();
+  renderTracker();
+}
+
+function haversineKm(a, b) {
+  const toRad = value => value * Math.PI / 180;
+  const dLat = toRad(b.coords.latitude - a.coords.latitude);
+  const dLon = toRad(b.coords.longitude - a.coords.longitude);
+  const lat1 = toRad(a.coords.latitude); const lat2 = toRad(b.coords.latitude);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+
+function pauseTracker() {
+  if (tracker.status !== 'running') return;
+  tracker.status = 'paused'; stopTrackerSources(); renderTracker(); $('#tracker-status').textContent = '一時停止中。再開するか、終了して保存できます。';
+}
+
+function finishTracker() {
+  if (tracker.status !== 'running' && tracker.status !== 'paused') return;
+  stopTrackerSources(); tracker.status = 'finished';
+  if (tracker.distance > 0) { state.stats.monthlyKm += tracker.distance; state.stats.crewDays += 1; renderProfileStats(); }
+  renderTracker(); $('#tracker-status').textContent = `今回のラン ${tracker.distance.toFixed(2)}km を今月の記録へ保存しました。`;
+  showToast('ランニング記録を保存しました');
+}
+
 $$('[data-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
 $('.wordmark')?.addEventListener('click', event => { event.preventDefault(); setView('home'); });
 $('.icon-button')?.addEventListener('click', () => showToast('新しい通知はありません'));
@@ -146,6 +236,9 @@ $$('[data-create-group]').forEach(group => $$('.segment', group).forEach(segment
 $('#reset-filters')?.addEventListener('click', resetFilters);
 $('#locate-me')?.addEventListener('click', locateMe);
 $('#locate-me-search')?.addEventListener('click', locateMe);
+$('#tracker-start')?.addEventListener('click', startTracker);
+$('#tracker-pause')?.addEventListener('click', pauseTracker);
+$('#tracker-finish')?.addEventListener('click', finishTracker);
 $$('[data-setting]').forEach(row => row.addEventListener('click', () => {
   const toggle = $('.toggle', row);
   if (toggle) toggle.classList.toggle('active');
@@ -170,5 +263,7 @@ $('#create-form')?.addEventListener('submit', event => {
 $$('.filter-chip').forEach(chip => chip.setAttribute('aria-pressed', chip.classList.contains('active') ? 'true' : 'false'));
 $$('.segment').forEach(segment => segment.setAttribute('aria-pressed', segment.classList.contains('active') ? 'true' : 'false'));
 renderListings();
+renderProfileStats();
+renderTracker();
 const initialView = window.location.hash.slice(1);
 setView(views.has(initialView) ? initialView : 'home', false);
