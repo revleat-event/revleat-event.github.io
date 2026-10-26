@@ -15,7 +15,7 @@
     <div class="app-shell">
       <header class="app-header">
         <a class="wordmark" href="#home" aria-label="RUNNECT ホーム"><span class="wordmark-mark">S</span><span>RUNNECT</span></a>
-        <div class="header-actions"><button class="icon-button" type="button" aria-label="通知"><span class="notification-dot"></span><svg class="bell-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg></button><button class="avatar avatar--small" type="button" data-view="profile" aria-label="マイページ">B</button></div>
+        <div class="header-actions"><button class="icon-button" id="notification-button" type="button" aria-label="通知" aria-expanded="false" aria-controls="notification-panel"><span class="notification-dot" hidden></span><svg class="bell-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg></button><button class="avatar avatar--small" type="button" data-view="profile" aria-label="マイページ">B</button><div class="notification-panel" id="notification-panel" hidden><div class="notification-panel-head"><div><p class="eyebrow"><span class="eyebrow-line"></span> INBOX</p><h2>通知</h2></div><span class="notification-count" id="notification-count">0</span></div><div class="notification-list" id="notification-list"></div></div></div>
       </header>
 
       <main>

@@ -5,7 +5,7 @@ const listings = [
 ];
 
 const views = new Set(['home', 'run', 'search', 'create', 'profile', 'settings']);
-const state = { view: 'home', activity: 'すべて', pace: 'すべて', area: 'すべて', joined: new Set(), stats: { joined: 24, monthlyKm: 186, crewDays: 12 } };
+const state = { view: 'home', activity: 'すべて', pace: 'すべて', area: 'すべて', joined: new Set(), notifications: [], stats: { joined: 24, monthlyKm: 186, crewDays: 12 } };
 const mapPoints = { 'ランニング': { x: 286, y: 168, color: '#d9ff4a' }, '散歩': { x: 206, y: 244, color: '#8cdbff' }, 'マラソン': { x: 348, y: 104, color: '#ff745c' } };
 let closeTimer;
 const tracker = { status: 'ready', startedAt: 0, elapsed: 0, distance: 0, timer: null, watchId: null, lastPosition: null, gpsTimer: null, mode: 'gps' };
@@ -80,6 +80,8 @@ function closeDetail() {
 function joinListing(id) {
   if (!state.joined.has(id)) state.stats.joined += 1;
   state.joined.add(id);
+  const item = listings.find(listing => listing.id === id);
+  addNotification('参加申請を送信しました', `${item?.title || '募集'}への参加申請を確認できます。`);
   renderProfileStats();
   renderListings();
   openDetail(id);
@@ -131,6 +133,30 @@ function showToast(message) {
   toast.classList.add('show');
   window.clearTimeout(showToast.timer);
   showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 2400);
+}
+
+function addNotification(title, body) {
+  state.notifications.unshift({ id: Date.now(), title, body, time: 'たった今' });
+  renderNotifications();
+}
+
+function renderNotifications() {
+  const list = $('#notification-list');
+  const count = $('#notification-count');
+  const dot = $('.notification-dot');
+  if (!list || !count || !dot) return;
+  count.textContent = state.notifications.length;
+  dot.hidden = state.notifications.length === 0;
+  list.innerHTML = state.notifications.length ? state.notifications.map(item => `<article class="notification-item"><span class="notification-mark">•</span><div><strong>${item.title}</strong><p>${item.body}</p><small>${item.time}</small></div></article>`).join('') : '<div class="notification-empty"><span class="notification-empty-mark">✓</span><strong>通知はありません</strong><p>新しいお知らせが届くと、ここに表示されます。</p></div>';
+}
+
+function toggleNotifications(force) {
+  const panel = $('#notification-panel');
+  const button = $('#notification-button');
+  if (!panel || !button) return;
+  const open = typeof force === 'boolean' ? force : panel.hidden;
+  panel.hidden = !open;
+  button.setAttribute('aria-expanded', String(open));
 }
 
 function renderProfileStats() {
@@ -217,14 +243,15 @@ function pauseTracker() {
 function finishTracker() {
   if (tracker.status !== 'running' && tracker.status !== 'paused') return;
   stopTrackerSources(); tracker.status = 'finished';
-  if (tracker.distance > 0) { state.stats.monthlyKm += tracker.distance; state.stats.crewDays += 1; renderProfileStats(); }
+  if (tracker.distance > 0) { state.stats.monthlyKm += tracker.distance; state.stats.crewDays += 1; renderProfileStats(); addNotification('ランニング記録を保存しました', `${tracker.distance.toFixed(2)}km / ${formatTrackerTime(tracker.elapsed)} を今月の記録に追加しました。`); }
   renderTracker(); $('#tracker-status').textContent = `今回のラン ${tracker.distance.toFixed(2)}km を今月の記録へ保存しました。`;
   showToast('ランニング記録を保存しました');
 }
 
 $$('[data-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
 $('.wordmark')?.addEventListener('click', event => { event.preventDefault(); setView('home'); });
-$('.icon-button')?.addEventListener('click', () => showToast('新しい通知はありません'));
+$('#notification-button')?.addEventListener('click', () => toggleNotifications());
+document.addEventListener('click', event => { if (!event.target.closest('.header-actions')) toggleNotifications(false); });
 $$('[data-filter-group]').forEach(group => {
   const key = group.dataset.filterGroup;
   $$('.filter-chip', group).forEach(chip => chip.addEventListener('click', () => setFilter(key, chip.dataset.value)));
@@ -269,5 +296,6 @@ $$('.segment').forEach(segment => segment.setAttribute('aria-pressed', segment.c
 renderListings();
 renderProfileStats();
 renderTracker();
+renderNotifications();
 const initialView = window.location.hash.slice(1);
 setView(views.has(initialView) ? initialView : 'home', false);
